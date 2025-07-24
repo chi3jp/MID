@@ -255,7 +255,9 @@
           try {
             // ブラウザとOS情報を取得
             const browserInfo =
-              navigator.userAgent.indexOf("Chrome") > -1 ? "Chrome" : "その他";
+              navigator.userAgent.indexOf("Chrome") > -1
+                ? "Chrome"
+                : "その他のブラウザ";
             const osInfo = navigator.platform;
 
             // 署名データをローカルストレージに保存（オプション）
