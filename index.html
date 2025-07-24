@@ -143,14 +143,6 @@
         color: #6c757d;
         font-size: 14px;
       }
-
-      #hiddenIframe {
-        display: none;
-        width: 0;
-        height: 0;
-        border: 0;
-        position: absolute;
-      }
     </style>
   </head>
   <body>
@@ -216,16 +208,12 @@
 
     <footer>&copy; 2025 Midjourney画像ダウンローダー</footer>
 
-    <!-- 非表示のiframe -->
-    <iframe id="hiddenIframe" name="hiddenIframe"></iframe>
-
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const agreeCheckbox = document.getElementById("agreeTerms");
         const downloadSection = document.getElementById("downloadSection");
         const submitSignatureBtn = document.getElementById("submitSignature");
         const downloadBtn = document.getElementById("downloadBtn");
-        const hiddenIframe = document.getElementById("hiddenIframe");
 
         // Google Sheetsのエンドポイント
         const SHEET_SCRIPT_URL =
@@ -271,8 +259,24 @@
               : "その他のブラウザ";
           const osInfo = navigator.platform;
 
-          // 非表示のiframeを使用してデータを送信（ポップアップなし）
-          const url =
+          // 画像要素を使用してデータを送信（ポップアップなし）
+          const img = new Image();
+          img.width = 1;
+          img.height = 1;
+          img.style.display = "none";
+          img.onload = function () {
+            // 画像の読み込みが完了したら成功とみなす
+            console.log("データ送信成功");
+          };
+          img.onerror = function () {
+            // エラーが発生しても処理を続行
+            console.log(
+              "データ送信中にエラーが発生しましたが、処理を続行します"
+            );
+          };
+
+          // URLを設定して送信
+          img.src =
             SHEET_SCRIPT_URL +
             "?socialAccount=" +
             encodeURIComponent(socialAccount) +
@@ -281,9 +285,11 @@
             "&os=" +
             encodeURIComponent(osInfo) +
             "&userAgent=" +
-            encodeURIComponent(navigator.userAgent);
+            encodeURIComponent(navigator.userAgent) +
+            "&t=" +
+            new Date().getTime(); // キャッシュ回避
 
-          hiddenIframe.src = url;
+          document.body.appendChild(img);
 
           // 送信完了とみなして処理を続行
           setTimeout(function () {
@@ -296,6 +302,11 @@
 
             // 成功メッセージ
             alert("署名が完了しました。ダウンロードボタンが有効になりました。");
+
+            // 画像要素を削除
+            if (img.parentNode) {
+              img.parentNode.removeChild(img);
+            }
           }, 1500);
         });
 
