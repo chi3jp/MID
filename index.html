@@ -217,7 +217,7 @@
 
         // Google Sheetsのエンドポイント
         const SHEET_SCRIPT_URL =
-          "https://script.google.com/macros/s/AKfycbyTjxrqjsbJUusDVzd3tQSiouDfX48j99C6unDYg3e0ISOSkLKdf5lpnVfjJiFR-nJd/exec";
+          "https://script.google.com/macros/s/AKfycbxIZInWtXtOvM3OfxohtTNa7jQcIDQpxlMHKn5jLlyn89t8Cseqq_mUpJhYarhNM8Ic/exec";
 
         // Google Driveのファイル情報
         const DOWNLOAD_FILE_ID = "1BwGgYf2nbBSS8VsVASfX9MW5VJyE-GyF";
@@ -259,24 +259,14 @@
               : "その他のブラウザ";
           const osInfo = navigator.platform;
 
-          // 画像要素を使用してデータを送信（ポップアップなし）
-          const img = new Image();
-          img.width = 1;
-          img.height = 1;
-          img.style.display = "none";
-          img.onload = function () {
-            // 画像の読み込みが完了したら成功とみなす
-            console.log("データ送信成功");
-          };
-          img.onerror = function () {
-            // エラーが発生しても処理を続行
-            console.log(
-              "データ送信中にエラーが発生しましたが、処理を続行します"
-            );
-          };
+          // デバッグ用：送信するデータをコンソールとアラートで表示
+          console.log("送信するデータ:");
+          console.log("socialAccount:", socialAccount);
+          console.log("browser:", browserInfo);
+          console.log("os:", osInfo);
 
-          // URLを設定して送信
-          img.src =
+          // fetchを使用してデータを送信（より確実）
+          const url =
             SHEET_SCRIPT_URL +
             "?socialAccount=" +
             encodeURIComponent(socialAccount) +
@@ -286,10 +276,21 @@
             encodeURIComponent(osInfo) +
             "&userAgent=" +
             encodeURIComponent(navigator.userAgent) +
-            "&t=" +
+            "&timestamp=" +
             new Date().getTime(); // キャッシュ回避
 
-          document.body.appendChild(img);
+          console.log("送信URL:", url);
+
+          // 非表示のiframeを使用してデータを送信
+          const iframe = document.createElement("iframe");
+          iframe.style.display = "none";
+          iframe.style.width = "0";
+          iframe.style.height = "0";
+          iframe.src = url;
+
+          document.body.appendChild(iframe);
+
+          console.log("iframeでデータ送信開始");
 
           // 送信完了とみなして処理を続行
           setTimeout(function () {
