@@ -143,6 +143,10 @@
         color: #6c757d;
         font-size: 14px;
       }
+
+      iframe {
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -181,21 +185,31 @@
           <h3>署名</h3>
           <p>ダウンロードするには、Instagramのアカウントを入力してください。</p>
 
-          <form id="signatureForm">
+          <!-- 直接Google Apps Scriptに送信するフォーム -->
+          <form id="signatureForm" method="POST" target="hiddenFrame">
             <div class="form-group">
               <label for="socialAccount">Instagramのアカウント</label>
               <input
                 type="text"
                 id="socialAccount"
+                name="socialAccount"
                 required
                 placeholder="アカウント名を入力してください（@は不要）"
               />
             </div>
 
+            <!-- 隠しフィールド -->
+            <input type="hidden" id="browser" name="browser" value="" />
+            <input type="hidden" id="os" name="os" value="" />
+            <input type="hidden" id="userAgent" name="userAgent" value="" />
+
             <button type="submit" id="submitSignature" class="button">
               署名を送信
             </button>
           </form>
+
+          <!-- 応答を受け取るための隠しiframe -->
+          <iframe name="hiddenFrame" id="hiddenFrame"></iframe>
         </div>
 
         <div id="downloadSection" class="download-section hidden">
@@ -219,20 +233,33 @@
         const downloadSection = document.getElementById("downloadSection");
         const submitSignatureBtn = document.getElementById("submitSignature");
         const downloadBtn = document.getElementById("downloadBtn");
+        const hiddenFrame = document.getElementById("hiddenFrame");
 
         // Google Sheetsのエンドポイント
         const SHEET_SCRIPT_URL =
           "https://script.google.com/macros/s/AKfycbyTjxrqjsbJUusDVzd3tQSiouDfX48j99C6unDYg3e0ISOSkLKdf5lpnVfjJiFR-nJd/exec";
 
+        // フォームのアクションを設定
+        signatureForm.action = SHEET_SCRIPT_URL;
+
         // Google Driveのファイル情報
         const DOWNLOAD_FILE_ID = "1BwGgYf2nbBSS8VsVASfX9MW5VJyE-GyF";
 
+        // ブラウザとOS情報を設定
+        document.getElementById("browser").value =
+          navigator.userAgent.indexOf("Chrome") > -1
+            ? "Chrome"
+            : "その他のブラウザ";
+        document.getElementById("os").value = navigator.platform;
+        document.getElementById("userAgent").value = navigator.userAgent;
+
         // 署名フォームの送信イベント
         signatureForm.addEventListener("submit", function (e) {
-          e.preventDefault();
+          // デフォルトの送信動作は阻止しない（フォームをそのまま送信）
 
           // 同意チェックの確認
           if (!agreeCheckbox.checked) {
+            e.preventDefault(); // フォーム送信を阻止
             alert("署名するには、規約に同意する必要があります。");
             return;
           }
@@ -244,6 +271,7 @@
 
           // 入力チェック
           if (!socialAccount) {
+            e.preventDefault(); // フォーム送信を阻止
             alert("Instagramアカウントを入力してください。");
             return;
           }
@@ -252,71 +280,31 @@
           submitSignatureBtn.disabled = true;
           submitSignatureBtn.textContent = "送信中...";
 
-          try {
-            // ブラウザとOS情報を取得
-            const browserInfo =
-              navigator.userAgent.indexOf("Chrome") > -1
-                ? "Chrome"
-                : "その他のブラウザ";
-            const osInfo = navigator.platform;
-
-            // 署名データをローカルストレージに保存（オプション）
-            try {
-              localStorage.setItem("midjourney_signature", socialAccount);
-            } catch (e) {
-              console.log("ローカルストレージへの保存に失敗しました");
-            }
-
-            // Google Sheetsへのデータ送信を試みる
-            // iframeを使用してCORS問題を回避
-            const iframe = document.createElement("iframe");
-            iframe.style.display = "none";
-            document.body.appendChild(iframe);
-
-            // 送信完了後の処理
-            setTimeout(function () {
-              // iframeを削除
-              if (iframe && iframe.parentNode) {
-                iframe.parentNode.removeChild(iframe);
-              }
-
-              // ダウンロードセクションを表示
-              downloadSection.classList.remove("hidden");
-
-              // 送信ボタンを元に戻す
-              submitSignatureBtn.disabled = false;
-              submitSignatureBtn.textContent = "署名を送信";
-
-              // 成功メッセージ
-              alert(
-                "署名が完了しました。ダウンロードボタンが有効になりました。"
-              );
-            }, 1500);
-
-            // Google Sheetsにデータを送信
-            const url =
-              SHEET_SCRIPT_URL +
-              "?socialAccount=" +
-              encodeURIComponent(socialAccount) +
-              "&browser=" +
-              encodeURIComponent(browserInfo) +
-              "&os=" +
-              encodeURIComponent(osInfo) +
-              "&userAgent=" +
-              encodeURIComponent(navigator.userAgent);
-
-            iframe.src = url;
-          } catch (error) {
-            console.error("署名の送信中にエラーが発生しました:", error);
-
-            // エラーが発生してもダウンロードは許可
-            alert(
-              "署名の記録中にエラーが発生しましたが、ダウンロードは可能です。"
-            );
+          // 送信完了後の処理（iframeのロード完了時）
+          hiddenFrame.onload = function () {
+            // ダウンロードセクションを表示
             downloadSection.classList.remove("hidden");
+
+            // 送信ボタンを元に戻す
             submitSignatureBtn.disabled = false;
             submitSignatureBtn.textContent = "署名を送信";
-          }
+
+            // 成功メッセージ
+            alert("署名が完了しました。ダウンロードボタンが有効になりました。");
+          };
+
+          // エラー処理（タイムアウト）
+          setTimeout(function () {
+            if (submitSignatureBtn.disabled) {
+              // まだ処理が完了していない場合
+              submitSignatureBtn.disabled = false;
+              submitSignatureBtn.textContent = "署名を送信";
+              downloadSection.classList.remove("hidden");
+              alert(
+                "署名の記録中にタイムアウトが発生しましたが、ダウンロードは可能です。"
+              );
+            }
+          }, 5000);
         });
 
         // ダウンロードボタンのクリックイベント
