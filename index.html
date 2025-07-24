@@ -143,6 +143,14 @@
         color: #6c757d;
         font-size: 14px;
       }
+
+      #hiddenIframe {
+        display: none;
+        width: 0;
+        height: 0;
+        border: 0;
+        position: absolute;
+      }
     </style>
   </head>
   <body>
@@ -208,12 +216,16 @@
 
     <footer>&copy; 2025 Midjourney画像ダウンローダー</footer>
 
+    <!-- 非表示のiframe -->
+    <iframe id="hiddenIframe" name="hiddenIframe"></iframe>
+
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const agreeCheckbox = document.getElementById("agreeTerms");
         const downloadSection = document.getElementById("downloadSection");
         const submitSignatureBtn = document.getElementById("submitSignature");
         const downloadBtn = document.getElementById("downloadBtn");
+        const hiddenIframe = document.getElementById("hiddenIframe");
 
         // Google Sheetsのエンドポイント
         const SHEET_SCRIPT_URL =
@@ -245,22 +257,21 @@
           submitSignatureBtn.disabled = true;
           submitSignatureBtn.textContent = "送信中...";
 
-          // 署名データを直接記録（スプレッドシートへの記録は省略）
-          // ローカルストレージに保存
+          // 署名データをローカルストレージに保存
           try {
             localStorage.setItem("midjourney_signature", socialAccount);
           } catch (e) {
             console.log("ローカルストレージへの保存に失敗しました");
           }
 
-          // 新しいウィンドウでGoogle Apps Scriptを開く（データ送信のため）
+          // ブラウザとOS情報を取得
           const browserInfo =
             navigator.userAgent.indexOf("Chrome") > -1
               ? "Chrome"
               : "その他のブラウザ";
           const osInfo = navigator.platform;
 
-          // URLパラメータを作成
+          // 非表示のiframeを使用してデータを送信（ポップアップなし）
           const url =
             SHEET_SCRIPT_URL +
             "?socialAccount=" +
@@ -272,23 +283,10 @@
             "&userAgent=" +
             encodeURIComponent(navigator.userAgent);
 
-          // 新しいウィンドウで開く（ポップアップブロックを回避するため小さいサイズで）
-          const signatureWindow = window.open(
-            url,
-            "_blank",
-            "width=1,height=1"
-          );
+          hiddenIframe.src = url;
 
-          // 2秒後にウィンドウを閉じる
+          // 送信完了とみなして処理を続行
           setTimeout(function () {
-            if (signatureWindow) {
-              try {
-                signatureWindow.close();
-              } catch (e) {
-                console.log("ウィンドウを閉じることができませんでした");
-              }
-            }
-
             // ダウンロードセクションを表示
             downloadSection.classList.remove("hidden");
 
@@ -298,7 +296,7 @@
 
             // 成功メッセージ
             alert("署名が完了しました。ダウンロードボタンが有効になりました。");
-          }, 2000);
+          }, 1500);
         });
 
         // ダウンロードボタンのクリックイベント
