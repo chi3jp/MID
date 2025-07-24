@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Midjourney画像ダウンローダー</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background-color: #f9f9f9;
+        color: #2e3338;
+        line-height: 1.6;
+        padding: 0;
+        margin: 0;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+
+      .card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 40px;
+        margin-bottom: 24px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+
+      .logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        font-size: 16px;
+        color: #6c757d;
+        font-weight: 400;
+      }
+
+      .alert {
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+      }
+
+      .alert-info {
+        background-color: rgba(88, 101, 242, 0.1);
+        border-left: 4px solid #5865f2;
+      }
+
+      .alert-danger {
+        background-color: rgba(237, 66, 69, 0.1);
+        border-left: 4px solid #ed4245;
+      }
+
+      .alert-warning {
+        background-color: rgba(250, 166, 26, 0.1);
+        border-left: 4px solid #faa61a;
+      }
+
+      .checkbox-container {
+        display: flex;
+        align-items: flex-start;
+        padding: 16px;
+        background-color: rgba(88, 101, 242, 0.05);
+        border-radius: 12px;
+        margin-bottom: 24px;
+      }
+
+      .signature-section {
+        padding: 24px;
+        background-color: rgba(88, 101, 242, 0.05);
+        border-radius: 12px;
+        margin-bottom: 24px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #e6e6e6;
+        border-radius: 12px;
+        font-size: 15px;
+      }
+
+      .button {
+        display: inline-block;
+        padding: 12px 24px;
+        background-color: #5865f2;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: center;
+        width: 100%;
+      }
+
+      .button-success {
+        background-color: #3ba55c;
+      }
+
+      .download-section {
+        text-align: center;
+        padding: 32px;
+        background-color: rgba(59, 165, 92, 0.1);
+        border-radius: 12px;
+        border: 1px solid rgba(59, 165, 92, 0.2);
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      footer {
+        text-align: center;
+        padding: 24px;
+        color: #6c757d;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="header">
+          <h1>Midjourney画像ダウンローダー</h1>
+          <p class="subtitle">Chrome拡張機能配布ページ</p>
+        </div>
+
+        <div class="alert alert-info">
+          <h2>概要</h2>
+          <p>
+            このChrome拡張機能は、Midjourneyのウェブサイトで生成された画像を簡単にダウンロードするためのツールです。
+          </p>
+        </div>
+
+        <div class="alert alert-danger">
+          <h2>重要な注意事項</h2>
+          <ul>
+            <li>この拡張機能は自己責任でご利用ください。</li>
+            <li>この拡張機能の著作権は放棄していません。</li>
+            <li>この拡張機能はCreateページでのみ使用できます。</li>
+            <li>動画には対応していません。</li>
+          </ul>
+        </div>
+
+        <div class="checkbox-container">
+          <input type="checkbox" id="agreeTerms" />
+          <label for="agreeTerms"
+            >上記の内容を理解し、自己責任で使用することに同意します</label
+          >
+        </div>
+
+        <div id="signatureSection" class="signature-section">
+          <h3>署名</h3>
+          <p>ダウンロードするには、Instagramのアカウントを入力してください。</p>
+
+          <form id="signatureForm">
+            <div class="form-group">
+              <label for="socialAccount">Instagramのアカウント</label>
+              <input
+                type="text"
+                id="socialAccount"
+                required
+                placeholder="アカウント名を入力してください（@は不要）"
+              />
+            </div>
+
+            <button type="submit" id="submitSignature" class="button">
+              署名を送信
+            </button>
+          </form>
+        </div>
+
+        <div id="downloadSection" class="download-section hidden">
+          <h2>ダウンロード</h2>
+          <p>
+            ご署名ありがとうございます。以下のボタンから拡張機能をダウンロードできます。
+          </p>
+          <button id="downloadBtn" class="button button-success">
+            拡張機能をダウンロード
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <footer>&copy; 2025 Midjourney画像ダウンローダー</footer>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const agreeCheckbox = document.getElementById("agreeTerms");
+        const signatureForm = document.getElementById("signatureForm");
+        const downloadSection = document.getElementById("downloadSection");
+        const submitSignatureBtn = document.getElementById("submitSignature");
+        const downloadBtn = document.getElementById("downloadBtn");
+
+        // Google Sheetsのエンドポイント
+        const SHEET_SCRIPT_URL =
+          "https://script.google.com/macros/s/AKfycbyTjxrqjsbJUusDVzd3tQSiouDfX48j99C6unDYg3e0ISOSkLKdf5lpnVfjJiFR-nJd/exec";
+
+        // Google Driveのファイル情報
+        const DOWNLOAD_FILE_ID = "1BwGgYf2nbBSS8VsVASfX9MW5VJyE-GyF";
+
+        // 署名フォームの送信イベント
+        signatureForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          // 同意チェックの確認
+          if (!agreeCheckbox.checked) {
+            alert("署名するには、規約に同意する必要があります。");
+            return;
+          }
+
+          // フォームデータの取得
+          const socialAccount = document
+            .getElementById("socialAccount")
+            .value.trim();
+
+          // 入力チェック
+          if (!socialAccount) {
+            alert("Instagramアカウントを入力してください。");
+            return;
+          }
+
+          // 送信中の表示
+          submitSignatureBtn.disabled = true;
+          submitSignatureBtn.textContent = "送信中...";
+
+          // データを送信
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", SHEET_SCRIPT_URL, true);
+          xhr.setRequestHeader("Content-Type", "application/json");
+
+          // 送信データの準備
+          const data = JSON.stringify({
+            socialAccount: socialAccount,
+            browser:
+              navigator.userAgent.indexOf("Chrome") > -1 ? "Chrome" : "その他",
+            os: navigator.platform,
+            userAgent: navigator.userAgent,
+          });
+
+          // 送信完了時の処理
+          xhr.onload = function () {
+            // ダウンロードセクションを表示
+            downloadSection.classList.remove("hidden");
+
+            // 送信ボタンを元に戻す
+            submitSignatureBtn.disabled = false;
+            submitSignatureBtn.textContent = "署名を送信";
+
+            alert("署名が完了しました。ダウンロードボタンが有効になりました。");
+          };
+
+          // エラー発生時の処理
+          xhr.onerror = function () {
+            alert(
+              "署名の記録中にエラーが発生しましたが、ダウンロードは可能です。"
+            );
+            downloadSection.classList.remove("hidden");
+            submitSignatureBtn.disabled = false;
+            submitSignatureBtn.textContent = "署名を送信";
+          };
+
+          // データ送信
+          xhr.send(data);
+        });
+
+        // ダウンロードボタンのクリックイベント
+        downloadBtn.addEventListener("click", function () {
+          if (!agreeCheckbox.checked) {
+            alert("ダウンロードするには、規約に同意する必要があります。");
+            downloadSection.classList.add("hidden");
+            return;
+          }
+
+          alert(
+            "ダウンロードを開始します。\n\nZIPファイルを展開後、Chrome拡張機能としてインストールしてください。"
+          );
+
+          // ダウンロードリンクを作成
+          const link = document.createElement("a");
+          link.href =
+            "https://drive.google.com/uc?export=download&id=" +
+            DOWNLOAD_FILE_ID;
+          link.click();
+        });
+      });
+    </script>
+  </body>
+</html>
